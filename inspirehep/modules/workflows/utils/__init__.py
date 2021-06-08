@@ -496,9 +496,14 @@ def get_record_from_hep(pid_type, pid_value):
 
 
 @backoff.on_exception(backoff.expo, (requests.exceptions.ConnectionError), base=4, max_tries=5)
-def put_record_to_hep(pid_type, pid_value, data=None):
+def put_record_to_hep(pid_type, pid_value, data=None, headers=None):
     if not data:
         raise InspirehepMissingDataError
+
+    _headers = _get_headers_for_hep()
+    if headers:
+        _headers.extend(headers)
+
     endpoint = get_endpoint_from_pid_type(pid_type)
     inspirehep_url = current_app.config.get("INSPIREHEP_URL")
     response = requests.put(
@@ -507,7 +512,7 @@ def put_record_to_hep(pid_type, pid_value, data=None):
             endpoint=endpoint,
             control_number=pid_value
         ),
-        headers=_get_headers_for_hep(),
+        headers=headers,
         json=data or {}
     )
     response.raise_for_status()
@@ -515,9 +520,13 @@ def put_record_to_hep(pid_type, pid_value, data=None):
 
 
 @backoff.on_exception(backoff.expo, (requests.exceptions.ConnectionError), base=4, max_tries=5)
-def post_record_to_hep(pid_type, data=None):
+def post_record_to_hep(pid_type, data=None, headers=None):
     if not data:
         raise InspirehepMissingDataError
+
+    _headers = _get_headers_for_hep()
+    if headers:
+        _headers.extend(headers)
     endpoint = get_endpoint_from_pid_type(pid_type)
     inspirehep_url = current_app.config.get("INSPIREHEP_URL")
     response = requests.post(
@@ -525,7 +534,7 @@ def post_record_to_hep(pid_type, data=None):
             inspirehep_url=inspirehep_url,
             endpoint=endpoint,
         ),
-        headers=_get_headers_for_hep(),
+        headers=headers,
         json=data or {}
     )
     response.raise_for_status()
